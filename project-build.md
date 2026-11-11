@@ -58,8 +58,10 @@
 - [ ] Verdict output (`winner`, `reasoning`) enforced via a zod schema, not JSON-format instructions in the prompt
 - [ ] Store both API keys in env vars, never in client code
 - [ ] Group inputs (e.g. "10 cows") still produce exactly one image for that side — handled in the prompt sent to the image API, not by looping
+- [ ] Every generated image follows the shared art style template in `api/art-style.js` (psychedelic ancient Chinese ink-brush fusion in neon magenta/acid green/cobalt/gold, patterns on the figure only, plain flat light-grey background, no text/borders/mandalas/halos/clouds). Build prompts via `buildImagePrompt()`; never inline style text in `fight.js`
 - [ ] Wire Fight button to call `/api/fight` instead of the fake timeout
-- [ ] Handle errors distinctly in the UI: verdict failure, image failure, rate-limit 429 — don't hang on loading forever
+- [ ] Handle errors distinctly in the UI: verdict failure, image failure, moderation-blocked, rate-limit 429 — don't hang on loading forever
+- [ ] Moderation-blocked is its own error case, separate from generic image failure: `api/fight.js` detects the image API's moderation/safety rejection and returns a distinct status/`code` (e.g. 422 + `code: 'moderation_blocked'`), and the UI shows a specific message (e.g. "That fighter can't be drawn — try another") rather than the generic image-failure text
 
 **Done when:** typing two real fighters returns winner + reasoning + one image per side from a single call; hammering Fight 6x in a minute from one IP gets blocked on the 6th and resets after a minute.
 

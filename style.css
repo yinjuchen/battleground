@@ -97,7 +97,7 @@ button:hover {
   aspect-ratio: 1;
   object-fit: cover;
   border-radius: 8px;
-  background: #222;
+  background: #000;
 }
 
 #view-error {
