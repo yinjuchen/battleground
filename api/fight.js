@@ -1,7 +1,7 @@
 // Stage 3 (verdict half): rate limit -> Claude verdict. Image generation is not added yet.
 const Anthropic = require('@anthropic-ai/sdk');
 const { zodOutputFormat } = require('@anthropic-ai/sdk/helpers/zod');
-const { z } = require('zod');
+const { z } = require('zod/v4'); // SDK's zodOutputFormat needs v4 schemas; root 'zod' is v3 in 3.25.x
 const { JUDGE_SYSTEM_PROMPT } = require('./judge-prompt');
 
 const MAX_FIGHTER_LENGTH = 200;
