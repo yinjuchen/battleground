@@ -14,8 +14,11 @@ function showView(name) {
 function showResult({ winner, reasoning, imageA, imageB }) {
   document.getElementById('result-winner').textContent = `${winner} wins!`;
   document.getElementById('result-reasoning').textContent = reasoning;
-  document.getElementById('result-image-a').src = imageA;
-  document.getElementById('result-image-b').src = imageB;
+  for (const [id, src] of [['result-image-a', imageA], ['result-image-b', imageB]]) {
+    const img = document.getElementById(id);
+    img.hidden = !src;
+    img.src = src || '';
+  }
   showView('result');
 }
 
@@ -24,17 +27,23 @@ function showError(message) {
   showView('error');
 }
 
-// Stage 1: fake fight, no network call yet. Stage 3 swaps this for a real fetch to /api/fight.
-function runFight(fighterA, fighterB) {
+async function runFight(fighterA, fighterB) {
   showView('loading');
-  setTimeout(() => {
-    showResult({
-      winner: fighterA,
-      reasoning: `${fighterA} defeats ${fighterB} in a stunning upset (placeholder reasoning).`,
-      imageA: 'https://placehold.co/200x200?text=' + encodeURIComponent(fighterA),
-      imageB: 'https://placehold.co/200x200?text=' + encodeURIComponent(fighterB),
+  try {
+    const res = await fetch('/api/fight', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fighterA, fighterB }),
     });
-  }, 1200);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showError(data.error || 'Something went wrong. Please try again.');
+      return;
+    }
+    showResult(data);
+  } catch (err) {
+    showError('Network error — check your connection and try again.');
+  }
 }
 
 document.getElementById('fight-form').addEventListener('submit', (e) => {
