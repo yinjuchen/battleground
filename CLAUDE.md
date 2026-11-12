@@ -23,5 +23,6 @@ Battleground: type two fighters, get an AI-generated verdict on who'd win plus A
 - **Group inputs** (e.g. "10 cows") get exactly one image per side — enforce this in the prompt sent to the image API, not by looping over units.
 - **Art style**: every image must use the shared template in `api/art-style.js` (`buildImagePrompt()`); don't inline or alter style text in `api/fight.js`.
 - **Image errors are distinct**: moderation-blocked is its own error case (own status/`code` and UI message), separate from generic image failure, verdict failure, and 429.
-- **BattleDex** (Stage 5+): saved fighters live in `localStorage` only, as `{ label, image }` — no fight/winner/reasoning data. Images are downsized via off-screen `<canvas>` and re-exported as compressed JPEG/WebP before saving, to stay under storage quota (Stage 6).
+- **BattleDex is its own page**: `battledex.html` + `battledex.js` (not a view in `index.html`). Shared storage helpers live in `dex.js`, loaded by both pages. The most recent fight is kept in `sessionStorage` so `battledex.html` can link back to `index.html#result`.
+- **BattleDex** (Stage 4+): saved fighters live in `localStorage` only, as `{ label, image }` — no fight/winner/reasoning data. Images are downsized via off-screen `<canvas>` and re-exported as compressed JPEG/WebP before saving, to stay under storage quota (Stage 6).
 - No routing/state library — everything is direct DOM manipulation by element ID.

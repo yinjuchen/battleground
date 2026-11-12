@@ -11,7 +11,25 @@ function showView(name) {
   }
 }
 
-function showResult({ winner, reasoning, imageA, imageB }) {
+function setSaveButton(btn, saved) {
+  btn.disabled = saved;
+  btn.textContent = saved ? 'Saved!' : 'Save to BattleDex';
+}
+
+// Most recent successful fight (also persisted via saveLastFight so BattleDex can link back).
+let lastResult = null;
+
+function showResult({ winner, reasoning, imageA, imageB, fighterA, fighterB, saved = {} }) {
+  lastResult = { winner, reasoning, imageA, imageB, fighterA, fighterB, saved: { a: !!saved.a, b: !!saved.b } };
+  saveLastFight(lastResult);
+  for (const side of ['a', 'b']) {
+    const label = side === 'a' ? fighterA : fighterB;
+    const image = side === 'a' ? imageA : imageB;
+    const btn = document.getElementById(`save-${side}`);
+    btn.hidden = !label || !image;
+    setSaveButton(btn, lastResult.saved[side]);
+  }
+  document.getElementById('save-status').textContent = '';
   document.getElementById('result-winner').textContent = `${winner} wins!`;
   document.getElementById('result-reasoning').textContent = reasoning;
   for (const [id, src] of [['result-image-a', imageA], ['result-image-b', imageB]]) {
@@ -40,7 +58,7 @@ async function runFight(fighterA, fighterB) {
       showError(data.error || 'Something went wrong. Please try again.');
       return;
     }
-    showResult(data);
+    showResult({ ...data, fighterA, fighterB });
   } catch (err) {
     showError('Network error — check your connection and try again.');
   }
@@ -55,3 +73,34 @@ document.getElementById('fight-form').addEventListener('submit', (e) => {
 
 document.getElementById('result-again').addEventListener('click', () => showView('form'));
 document.getElementById('error-again').addEventListener('click', () => showView('form'));
+
+async function saveFighter(side) {
+  if (!lastResult || lastResult.saved[side]) return;
+  const label = side === 'a' ? lastResult.fighterA : lastResult.fighterB;
+  const image = side === 'a' ? lastResult.imageA : lastResult.imageB;
+  const status = document.getElementById('save-status');
+  const btn = document.getElementById(`save-${side}`);
+  btn.disabled = true; // block double-clicks while compressing
+  try {
+    const small = await compressImage(image);
+    const list = loadDex();
+    list.push({ label, image: small });
+    if (!saveDex(list)) throw new Error('quota');
+    lastResult.saved[side] = true;
+    saveLastFight(lastResult);
+    setSaveButton(btn, true);
+    status.textContent = '';
+  } catch (err) {
+    btn.disabled = false;
+    status.textContent = 'Could not save — browser storage is full. Delete some fighters from the BattleDex first.';
+  }
+}
+
+document.getElementById('save-a').addEventListener('click', () => saveFighter('a'));
+document.getElementById('save-b').addEventListener('click', () => saveFighter('b'));
+
+// Coming back from battledex.html#result: restore the most recent fight.
+if (location.hash === '#result') {
+  const recent = loadLastFight();
+  if (recent) showResult(recent);
+}

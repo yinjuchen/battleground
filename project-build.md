@@ -13,7 +13,7 @@
 - [ ] `package.json` (name, no deps yet unless a dev server is wanted)
 - [ ] Run locally (e.g. `vercel dev` or a static server), confirm blank page loads
 
-**Done when:** blank page loads locally. No deploy — building and testing locally the whole way.
+**Done when:** blank page loads locally. No deploy until Stage 7 — build and test locally until then.
 
 ---
 
@@ -67,31 +67,23 @@
 
 ---
 
-## Stage 4 — Verdict UI polish
-
-**Goal:** match brief's spec: "winner card with animation, plus written reasoning."
-
-- [ ] Winner card component: name, image, reasoning text
-- [ ] Entry animation (CSS transition/keyframes) when result lands
-- [ ] Clean up loading state so it covers the full wait for the fight call
-
-**Done when:** full Fight flow feels finished, no more placeholder styling.
-
----
-
-## Stage 5 — BattleDex (save to localStorage)
+## Stage 4 — BattleDex (save to localStorage)
 
 **Goal:** save individual fighters, view saved fighters.
 
 - [ ] "Save" action per fighter: writes `{ label, image }` to a `localStorage` array — no fight/winner/reasoning data, just the fighter
-- [ ] BattleDex view: list/grid of saved fighters, click to view label + image
-- [ ] Delete/clear entries from BattleDex
+- [ ] BattleDex lives in its own page, `battledex.html` (+ `battledex.js`; shared storage helpers in `dex.js`), linked from the main page — not a fifth view in `index.html`
+- [ ] BattleDex page: grid of saved fighters, each shown as a styled card — image on top, name below, matching a mini trading-card look
+- [ ] Cards are display-only: not clickable, no detail view (it's just the name and image)
+- [ ] BattleDex page has a link back to the most recent fight's result (`index.html#result`; last fight kept in `sessionStorage`, not `localStorage`, since BattleDex stores no fight data; link hidden if no recent fight)
+- [ ] BattleDex page has a link to start a new fight (`index.html`)
+- [ ] Delete individual BattleDex entries (a visible Delete button on each card), plus Clear all
 
 **Done when:** save a fighter, reload the page, it's still there in BattleDex.
 
 ---
 
-## Stage 6 — Image compression before save
+## Stage 5 — Image compression before save
 
 **Goal:** stay under `localStorage` quota (per brief §5).
 
@@ -103,15 +95,30 @@
 
 ---
 
-## Stage 7 — Final QA
+## Stage 6 — Claude redesign
 
-**Goal:** ship it, locally.
+**Goal:** instead of just polishing the verdict UI, hand the entire app to Claude Design for a full visual overhaul.
+
+- [ ] Hand off the whole app (form, loading, result/verdict, error views, plus the BattleDex page) to Claude Design for a full visual redesign
+- [ ] Include the verdict presentation from the brief: winner card with entry animation, plus written reasoning
+- [ ] Apply the redesign to `index.html` / `style.css` / `script.js` without breaking the `showView`, `showResult`, `showError` contracts or the `/api/fight` response shape
+- [ ] Loading state covers the full wait for the fight call
+- [ ] Redesign accommodates the art style (black image cards, light-grey image backgrounds) and all distinct error cases (verdict, image, moderation-blocked, 429)
+
+**Done when:** the whole app has a cohesive redesigned look, no placeholder styling left, and the full Fight + BattleDex flow still works.
+
+---
+
+## Stage 7 — Final QA + deploy
+
+**Goal:** verify the MVP end to end, then ship it to Vercel.
 
 - [ ] Full manual pass: empty inputs, one empty input, same fighter twice, very long names, non-English input
 - [ ] Confirm rate limiting doesn't fire on normal single-fight use
-- [ ] Confirm loading/error states cover: fight API failure (verdict or image side), rate limit hit, network offline
+- [ ] Confirm loading/error states cover: fight API failure (verdict or image side), moderation-blocked, rate limit hit, network offline
+- [ ] Deploy to Vercel: set `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` as Vercel env vars, deploy, and re-run the core Fight flow on the live URL
 
-**Done when:** local build handles the MVP end to end without console errors. No deploy step — stays local.
+**Done when:** local build handles the MVP end to end without console errors, and the deployed Vercel app works the same.
 
 ---
 

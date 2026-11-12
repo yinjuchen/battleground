@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BattleDex - Battleground</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app">
+    <h1>BattleDex</h1>
+
+    <div class="battledex-actions">
+      <a href="index.html#result" id="battledex-recent" class="button secondary" hidden>Back to recent fight</a>
+      <a href="index.html" id="battledex-new" class="button">New fight</a>
+    </div>
+
+    <p id="battledex-empty">No saved fighters yet. Win some fights and save them!</p>
+    <div id="battledex-grid" class="battledex-grid"></div>
+    <button type="button" id="battledex-clear" class="secondary" hidden>Clear all</button>
+  </main>
+
+  <script src="dex.js"></script>
+  <script src="battledex.js"></script>
+</body>
+</html>
