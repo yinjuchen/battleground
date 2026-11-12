@@ -127,6 +127,13 @@ document.getElementById('fight-form').addEventListener('submit', (e) => {
   e.preventDefault();
   const fighterA = document.getElementById('fighter-a').value.trim();
   const fighterB = document.getElementById('fighter-b').value.trim();
+  if (!fighterA || !fighterB) {
+    showFormError(!fighterA && !fighterB
+      ? 'The ring is empty, folks! Name BOTH contenders before the bell rings.'
+      : `Hold the bell! Fighter ${!fighterA ? 'I' : 'II'} hasn't shown up yet. Name your contender to start the fight!`);
+    document.getElementById(!fighterA ? 'fighter-a' : 'fighter-b').focus();
+    return;
+  }
   const tooLong = [fighterA, fighterB].some((f) => f.length > MAX_FIGHTER_LENGTH);
   if (tooLong) {
     showFormError(`That name won't fit on the announcer's scoreboard! Keep each fighter to ${MAX_FIGHTER_LENGTH} characters or fewer.`);
