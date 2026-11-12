@@ -4,56 +4,91 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Battleground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;600;700&family=VT323&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="has-arena">
+  <!-- Fight scene: sits behind every view, driven by arena.js -->
+  <div id="arena" aria-hidden="true">
+    <div id="arena-world">
+      <canvas id="arena-bg"></canvas>
+      <div class="fighter-wrap" id="wrap-a" hidden><div class="shadow"></div><div class="mover" id="mover-a"><div class="bob" id="bob-a"><canvas class="sprite" id="cv-a" width="48" height="48"></canvas></div></div></div>
+      <div class="fighter-wrap right" id="wrap-b" hidden><div class="shadow"></div><div class="mover" id="mover-b"><div class="bob" id="bob-b"><canvas class="sprite flip" id="cv-b" width="48" height="48"></canvas></div></div></div>
+      <div id="arena-sparks"></div>
+    </div>
+    <div id="arena-flash"></div>
+    <div id="arena-hud" hidden>
+      <div class="hud-side"><div class="bar"><div class="trail" id="trail-a"></div><div class="fill" id="fill-a"></div></div><div class="hud-name"><span class="num">I</span><span id="name-a"></span></div></div>
+      <div class="hud-side right"><div class="bar"><div class="trail" id="trail-b"></div><div class="fill" id="fill-b"></div></div><div class="hud-name"><span id="name-b"></span><span class="num">II</span></div></div>
+    </div>
+    <div id="arena-ko" hidden>K.O.</div>
+    <div id="arena-pad" hidden>
+      <div class="pad-group"><button type="button" class="pad-btn" data-k="left" aria-label="Move left">&#9664;</button><button type="button" class="pad-btn" data-k="right" aria-label="Move right">&#9654;</button></div>
+      <div class="pad-group"><button type="button" class="pad-btn wide" data-k="block">BLOCK</button><button type="button" class="pad-btn wide" data-k="punch">PUNCH</button><button type="button" class="pad-btn wide" data-k="kick">KICK</button></div>
+    </div>
+    <p id="arena-keys" hidden>&larr; &rarr; move &middot; J punch &middot; K kick &middot; hold L block</p>
+    <div id="arena-controls" hidden>
+      <button type="button" id="arena-sound" class="pixel-btn">SOUND: ON</button>
+      <button type="button" id="arena-skip" class="pixel-btn" hidden>SKIP TO VERDICT</button>
+    </div>
+  </div>
+
   <main class="app">
-    <h1>Battleground</h1>
-
     <section id="view-form" class="view">
-      <form id="fight-form">
-        <label for="fighter-a">Fighter A</label>
+      <p class="eyebrow">The Jade Sea · Isle of Eight Immortals</p>
+      <h1>Battleground</h1>
+      <form id="fight-form" class="panel">
+        <label for="fighter-a">Fighter I</label>
         <input type="text" id="fighter-a" name="fighterA" placeholder="e.g. a grizzly bear" required />
-
-        <label for="fighter-b">Fighter B</label>
+        <div class="vs"><span></span><b>VS</b><span></span></div>
+        <label for="fighter-b">Fighter II</label>
         <input type="text" id="fighter-b" name="fighterB" placeholder="e.g. 10 cows" required />
-
+        <div class="mode" role="radiogroup" aria-label="Mode">
+          <label class="mode-opt"><input type="radio" name="mode" value="play" checked /><span>Play as Fighter I</span></label>
+          <label class="mode-opt"><input type="radio" name="mode" value="watch" /><span>Just watch</span></label>
+        </div>
         <p id="form-error" role="alert" hidden></p>
-        <button type="submit">Fight</button>
+        <button type="submit">Enter the arena</button>
+        <a href="battledex.html" class="button secondary">BattleDex</a>
       </form>
-      <a href="battledex.html" class="button secondary">BattleDex</a>
     </section>
 
     <section id="view-loading" class="view" hidden>
-      <div class="spinner" aria-hidden="true"></div>
       <p id="loading-message" role="status">Fighting...</p>
     </section>
 
-    <section id="view-result" class="view" hidden>
+    <section id="view-fight" class="view" hidden></section>
+
+    <section id="view-result" class="view panel" hidden>
+      <p class="eyebrow" id="result-eyebrow">The Emperor has spoken</p>
       <h2 id="result-winner"></h2>
+      <div class="rule"></div>
+      <p id="result-reasoning"></p>
       <div class="fighters">
         <div class="fighter">
-          <img id="result-image-a" src="" alt="Fighter A" />
-          <button type="button" id="save-a" class="save-btn">Save to BattleDex</button>
+          <img id="result-image-a" alt="Fighter A" />
+          <button type="button" id="save-a" class="save-btn secondary">Save to BattleDex</button>
         </div>
         <div class="fighter">
-          <img id="result-image-b" src="" alt="Fighter B" />
-          <button type="button" id="save-b" class="save-btn">Save to BattleDex</button>
+          <img id="result-image-b" alt="Fighter B" />
+          <button type="button" id="save-b" class="save-btn secondary">Save to BattleDex</button>
         </div>
       </div>
       <p id="save-status" role="status"></p>
-      <p id="result-reasoning"></p>
       <button id="result-again">Fight again</button>
       <a href="battledex.html" class="button secondary">BattleDex</a>
     </section>
 
-    <section id="view-error" class="view" hidden>
+    <section id="view-error" class="view panel" hidden>
       <p id="error-message">Something went wrong.</p>
       <button id="error-again">Try again</button>
     </section>
   </main>
 
   <script src="dex.js"></script>
+  <script src="arena.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

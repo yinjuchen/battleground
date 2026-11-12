@@ -1,6 +1,8 @@
+
 const views = {
   form: document.getElementById('view-form'),
   loading: document.getElementById('view-loading'),
+  fight: document.getElementById('view-fight'), // arena plays the fight behind this empty view
   result: document.getElementById('view-result'),
   error: document.getElementById('view-error'),
 };
@@ -10,17 +12,16 @@ const LOADING_MESSAGES = [
   'Consulting the ancient scrolls...',
   'Polishing the championship belt...',
   'Warming up the crowd...',
-  'Summoning the arena torches...',
+  'Lighting the lanterns over the Jade Sea...',
   'Taping up the fighters\' knuckles...',
   'Unfurling the battle ribbons...',
   'Asking the judges to stop snacking...',
-  'Sweeping the sand off the arena floor...',
+  'Sweeping the deck planks...',
   'Counting the odds (they are bad)...',
 ];
 const LOADING_INTERVAL_MS = 2500;
 let loadingTimer = null;
 
-// Cycle through the loading phrases (random start, no immediate repeats) while the loading view is up.
 function startLoadingMessages() {
   stopLoadingMessages();
   const el = document.getElementById('loading-message');
@@ -41,6 +42,7 @@ function showView(name) {
   for (const key in views) {
     views[key].hidden = key !== name;
   }
+  document.body.classList.toggle('fighting', name === 'loading' || name === 'fight');
   if (name === 'loading') startLoadingMessages();
   else stopLoadingMessages();
 }
@@ -50,10 +52,9 @@ function setSaveButton(btn, saved) {
   btn.textContent = saved ? 'Saved!' : 'Save to BattleDex';
 }
 
-// Most recent successful fight (also persisted via saveLastFight so BattleDex can link back).
 let lastResult = null;
 
-function showResult({ winner, reasoning, imageA, imageB, fighterA, fighterB, saved = {} }) {
+function showResult({ winner, reasoning, imageA, imageB, fighterA, fighterB, saved = {}, eyebrow = 'The Emperor has spoken' }) {
   lastResult = { winner, reasoning, imageA, imageB, fighterA, fighterB, saved: { a: !!saved.a, b: !!saved.b } };
   saveLastFight(lastResult);
   for (const side of ['a', 'b']) {
@@ -64,22 +65,28 @@ function showResult({ winner, reasoning, imageA, imageB, fighterA, fighterB, sav
     setSaveButton(btn, lastResult.saved[side]);
   }
   document.getElementById('save-status').textContent = '';
-  document.getElementById('result-winner').textContent = `${winner} wins!`;
+  document.getElementById('result-eyebrow').textContent = eyebrow;
+  document.getElementById('result-winner').textContent = `${winner} triumphs`;
   document.getElementById('result-reasoning').textContent = reasoning;
   for (const [id, src] of [['result-image-a', imageA], ['result-image-b', imageB]]) {
     const img = document.getElementById(id);
     img.hidden = !src;
-    img.src = src || '';
+    if (src) img.src = src; else img.removeAttribute('src');
   }
+  Arena.hold();
   showView('result');
 }
 
 function showError(message) {
+  Arena.reset();
   document.getElementById('error-message').textContent = message;
   showView('error');
 }
 
 async function runFight(fighterA, fighterB) {
+  const mode = (document.querySelector('input[name="mode"]:checked') || {}).value || 'play';
+  Arena.unlockAudio(); // runs inside the submit click, so sound is allowed
+  Arena.intro();
   showView('loading');
   try {
     const res = await fetch('/api/fight', {
@@ -92,7 +99,13 @@ async function runFight(fighterA, fighterB) {
       showError(data.error || 'Well, THAT wasn\'t in the script! Something broke backstage. Give it another go!');
       return;
     }
-    showResult({ ...data, fighterA, fighterB });
+    showView('fight');
+    const out = await Arena.fight({ fighterA, fighterB, winner: data.winner, imageA: data.imageA, imageB: data.imageB, mode });
+    const real = out.winner === 'a' ? fighterA : fighterB;
+    if (mode === 'play') {
+      showResult({ ...data, winner: real, fighterA, fighterB, eyebrow: out.winner === 'a' ? 'Victory' : 'Defeat',
+        reasoning: 'The judge called it for ' + data.winner + '. ' + data.reasoning });
+    } else showResult({ ...data, fighterA, fighterB });
   } catch (err) {
     showError('The signal to the arena just got knocked out cold! Check your connection and step back into the ring.');
   }
@@ -106,7 +119,6 @@ function showFormError(message) {
   formError.hidden = false;
 }
 
-// Typing again clears the inline form error.
 for (const id of ['fighter-a', 'fighter-b']) {
   document.getElementById(id).addEventListener('input', () => { formError.hidden = true; });
 }
@@ -124,8 +136,9 @@ document.getElementById('fight-form').addEventListener('submit', (e) => {
   runFight(fighterA, fighterB);
 });
 
-document.getElementById('result-again').addEventListener('click', () => showView('form'));
-document.getElementById('error-again').addEventListener('click', () => showView('form'));
+function backToForm() { Arena.reset(); showView('form'); }
+document.getElementById('result-again').addEventListener('click', backToForm);
+document.getElementById('error-again').addEventListener('click', backToForm);
 
 async function saveFighter(side) {
   if (!lastResult || lastResult.saved[side]) return;
@@ -133,7 +146,7 @@ async function saveFighter(side) {
   const image = side === 'a' ? lastResult.imageA : lastResult.imageB;
   const status = document.getElementById('save-status');
   const btn = document.getElementById(`save-${side}`);
-  btn.disabled = true; // block double-clicks while compressing
+  btn.disabled = true;
   try {
     const small = await compressImage(image);
     const list = loadDex();
@@ -151,6 +164,8 @@ async function saveFighter(side) {
 
 document.getElementById('save-a').addEventListener('click', () => saveFighter('a'));
 document.getElementById('save-b').addEventListener('click', () => saveFighter('b'));
+
+Arena.init();
 
 // Coming back from battledex.html#result: restore the most recent fight.
 if (location.hash === '#result') {
