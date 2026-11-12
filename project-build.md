@@ -59,6 +59,7 @@
 - [ ] Store both API keys in env vars, never in client code
 - [ ] Group inputs (e.g. "10 cows") still produce exactly one image for that side — handled in the prompt sent to the image API, not by looping
 - [ ] Every generated image follows the shared art style template in `api/art-style.js` (psychedelic ancient Chinese ink-brush fusion in neon magenta/acid green/cobalt/gold, patterns on the figure only, plain flat light-grey background, no text/borders/mandalas/halos/clouds). Build prompts via `buildImagePrompt()`; never inline style text in `fight.js`
+- [ ] Fighter inputs capped at 50 characters, enforced on both the frontend (inline playful error, no request sent) and the backend (400 with the same tone)
 - [ ] Wire Fight button to call `/api/fight` instead of the fake timeout
 - [ ] Handle errors distinctly in the UI: verdict failure, image failure, moderation-blocked, rate-limit 429 — don't hang on loading forever
 - [ ] Moderation-blocked is its own error case, separate from generic image failure: `api/fight.js` detects the image API's moderation/safety rejection and returns a distinct status/`code` (e.g. 422 + `code: 'moderation_blocked'`), and the UI shows a specific message (e.g. "That fighter can't be drawn — try another") rather than the generic image-failure text
@@ -87,13 +88,14 @@
 
 **Goal:** stay under `localStorage` quota (per brief §5).
 
-- [ ] Before saving a fighter to BattleDex, draw its image to an off-screen `<canvas>`, resize down, re-export as JPEG/WebP at reduced quality
-- [ ] Save the compressed data URI, not the original
-- [ ] Test with several saved fighters that quota isn't hit quickly
+- [x] Before saving a fighter to BattleDex, draw its image to an off-screen `<canvas>`, resize down, re-export as JPEG/WebP at reduced quality
+- [x] Save the compressed data URI, not the original
+- [x] Test with several saved fighters that quota isn't hit quickly
 
 **Done when:** ~10+ saved fighters don't blow `localStorage` quota.
 
 ---
+
 
 ## Stage 6 — Claude redesign
 

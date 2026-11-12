@@ -6,7 +6,7 @@ const OpenAI = require('openai');
 const { JUDGE_SYSTEM_PROMPT } = require('./judge-prompt');
 const { buildImagePrompt } = require('./art-style');
 
-const MAX_FIGHTER_LENGTH = 200;
+const MAX_FIGHTER_LENGTH = 50; // keep in sync with MAX_FIGHTER_LENGTH in script.js
 const RATE_LIMIT = 5;
 const WINDOW_MS = 60 * 1000;
 
@@ -33,7 +33,7 @@ const VerdictSchema = z.object({
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
-    return res.status(405).json({ error: 'Method not allowed.' });
+    return res.status(405).json({ error: "Wrong door, challenger! This arena only takes POST requests." });
   }
 
   // Rate limit first, before any external API call.
@@ -41,7 +41,7 @@ module.exports = async function handler(req, res) {
     .split(',')[0]
     .trim();
   if (isRateLimited(ip)) {
-    return res.status(429).json({ error: 'Too many fights! Max 5 per minute — try again shortly.' });
+    return res.status(429).json({ error: 'Whoa there, slugger! The crowd needs a breather: five fights a minute is the limit. Catch your breath and come back shortly!' });
   }
 
   const { fighterA, fighterB } = req.body || {};
@@ -49,10 +49,10 @@ module.exports = async function handler(req, res) {
     typeof fighterA !== 'string' || typeof fighterB !== 'string' ||
     !fighterA.trim() || !fighterB.trim()
   ) {
-    return res.status(400).json({ error: 'Both fighters are required.' });
+    return res.status(400).json({ error: 'A fight needs TWO contenders, folks! Step up both fighters and try again.' });
   }
-  if (fighterA.length > MAX_FIGHTER_LENGTH || fighterB.length > MAX_FIGHTER_LENGTH) {
-    return res.status(400).json({ error: `Fighter names must be ${MAX_FIGHTER_LENGTH} characters or fewer.` });
+  if (fighterA.trim().length > MAX_FIGHTER_LENGTH || fighterB.trim().length > MAX_FIGHTER_LENGTH) {
+    return res.status(400).json({ error: `That name won't fit on the announcer's scoreboard! Keep each fighter to ${MAX_FIGHTER_LENGTH} characters or fewer.` });
   }
 
   const [verdictResult, imageResults] = await Promise.all([
@@ -64,11 +64,11 @@ module.exports = async function handler(req, res) {
 
   if (!verdictResult.ok) {
     console.error('Verdict call failed:', verdictResult.err);
-    return res.status(502).json({ code: 'verdict_failed', error: 'The judge is unavailable right now. Please try again.' });
+    return res.status(502).json({ code: 'verdict_failed', error: 'The judge has wandered off mid-fight! Give it another shot and we\'ll drag them back to their seat.' });
   }
   const verdict = verdictResult.v;
   if (!verdict || (verdict.winner !== fighterA && verdict.winner !== fighterB)) {
-    return res.status(502).json({ code: 'verdict_invalid', error: 'The judge gave an invalid verdict. Please try again.' });
+    return res.status(502).json({ code: 'verdict_invalid', error: 'The judges scribbled something unreadable on the scorecard! Run the fight again for a proper verdict.' });
   }
 
   const failed = imageResults.find((r) => !r.ok);
@@ -77,10 +77,10 @@ module.exports = async function handler(req, res) {
     if (isModerationBlock(failed.err)) {
       return res.status(422).json({
         code: 'moderation_blocked',
-        error: "One of those fighters can't be drawn. Try a different fighter.",
+        error: "The arena censors have blocked one of those contenders from entering the ring! Pick a different fighter and try again.",
       });
     }
-    return res.status(502).json({ code: 'image_failed', error: 'The artist is unavailable right now. Please try again.' });
+    return res.status(502).json({ code: 'image_failed', error: 'Our portrait painter dropped their brush! The fight is on hold, so try again in a moment.' });
   }
 
   return res.status(200).json({

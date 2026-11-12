@@ -221,3 +221,13 @@ button:disabled {
 #battledex-clear {
   width: 100%;
 }
+
+#form-error {
+  margin: 0.25rem 0 0;
+  color: #ff8080;
+  font-size: 0.9rem;
+}
+
+#form-error[hidden] {
+  display: none;
+}
